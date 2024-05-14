@@ -351,6 +351,12 @@ public:
             numElements);
     }
 
+    static LogicalType makeLogicalTypeUnsafe(LogicalTypeID typeID) {
+        LogicalType ret;
+        ret.typeID = typeID;
+        return ret;
+    }
+
 private:
     friend struct CAPIHelper;
     friend struct JavaAPIHelper;
