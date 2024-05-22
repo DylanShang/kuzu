@@ -1,5 +1,6 @@
 #pragma once
 
+#include "storage/storage_structure/disk_array.h"
 #include "storage/store/chunked_node_group.h"
 #include "storage/store/column.h"
 
@@ -66,13 +67,13 @@ public:
     virtual common::node_group_idx_t getNumCommittedNodeGroups() const = 0;
 
 protected:
-    TableData(BMFileHandle* dataFH, BMFileHandle* metadataFH,
+    TableData(BMFileHandle* dataFH, DiskArrayCollection* metadataDAC,
         catalog::TableCatalogEntry* tableEntry, BufferManager* bufferManager, WAL* wal,
         bool enableCompression);
 
 protected:
     BMFileHandle* dataFH;
-    BMFileHandle* metadataFH;
+    DiskArrayCollection* metadataDAC;
     common::table_id_t tableID;
     std::string tableName;
     BufferManager* bufferManager;

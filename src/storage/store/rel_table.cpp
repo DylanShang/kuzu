@@ -4,6 +4,7 @@
 #include "common/exception/message.h"
 #include "storage/local_storage/local_rel_table.h"
 #include "storage/stats/rels_store_statistics.h"
+#include "storage/storage_structure/disk_array.h"
 #include "storage/store/rel_table_data.h"
 
 using namespace kuzu::catalog;
@@ -21,13 +22,13 @@ RelDetachDeleteState::RelDetachDeleteState() {
     relIDVector->setState(tempSharedState);
 }
 
-RelTable::RelTable(BMFileHandle* dataFH, BMFileHandle* metadataFH, RelsStoreStats* relsStoreStats,
-    MemoryManager* memoryManager, RelTableCatalogEntry* relTableEntry, WAL* wal,
-    bool enableCompression)
+RelTable::RelTable(BMFileHandle* dataFH, DiskArrayCollection* metadataDAC,
+    RelsStoreStats* relsStoreStats, MemoryManager* memoryManager,
+    RelTableCatalogEntry* relTableEntry, WAL* wal, bool enableCompression)
     : Table{relTableEntry, relsStoreStats, memoryManager, wal} {
-    fwdRelTableData = std::make_unique<RelTableData>(dataFH, metadataFH, bufferManager, wal,
+    fwdRelTableData = std::make_unique<RelTableData>(dataFH, metadataDAC, bufferManager, wal,
         relTableEntry, relsStoreStats, RelDataDirection::FWD, enableCompression);
-    bwdRelTableData = std::make_unique<RelTableData>(dataFH, metadataFH, bufferManager, wal,
+    bwdRelTableData = std::make_unique<RelTableData>(dataFH, metadataDAC, bufferManager, wal,
         relTableEntry, relsStoreStats, RelDataDirection::BWD, enableCompression);
 }
 

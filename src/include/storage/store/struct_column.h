@@ -1,5 +1,6 @@
 #pragma once
 
+#include "storage/storage_structure/disk_array_collection.h"
 #include "storage/store/column.h"
 
 namespace kuzu {
@@ -8,9 +9,9 @@ namespace storage {
 class StructColumn final : public Column {
 public:
     StructColumn(std::string name, common::LogicalType dataType,
-        const MetadataDAHInfo& metaDAHeaderInfo, BMFileHandle* dataFH, BMFileHandle* metadataFH,
-        BufferManager* bufferManager, WAL* wal, transaction::Transaction* transaction,
-        bool enableCompression);
+        const MetadataDAHInfo& metaDAHeaderInfo, BMFileHandle* dataFH,
+        DiskArrayCollection& metadataDAC, BufferManager* bufferManager, WAL* wal,
+        transaction::Transaction* transaction, bool enableCompression);
 
     void initChunkState(transaction::Transaction* transaction,
         common::node_group_idx_t nodeGroupIdx, ChunkState& chunkState) override;

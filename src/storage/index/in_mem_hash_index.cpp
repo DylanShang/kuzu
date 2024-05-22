@@ -345,14 +345,6 @@ bool InMemHashIndex<ku_string_t>::equals(std::string_view keyToLookup,
 }
 
 template<typename T>
-void InMemHashIndex<T>::createEmptyIndexFiles(uint64_t indexPos, FileHandle& fileHandle) {
-    DiskArray<Slot<T>>::addDAHPageToFile(fileHandle,
-        INDEX_HEADER_PAGES + NUM_HEADER_PAGES * indexPos + P_SLOTS_HEADER_PAGE_IDX);
-    DiskArray<Slot<T>>::addDAHPageToFile(fileHandle,
-        INDEX_HEADER_PAGES + NUM_HEADER_PAGES * indexPos + O_SLOTS_HEADER_PAGE_IDX);
-}
-
-template<typename T>
 bool InMemHashIndex<T>::deleteKey(Key key) {
     if (this->indexHeader.numEntries == 0) {
         return false;
