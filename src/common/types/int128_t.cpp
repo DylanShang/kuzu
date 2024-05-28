@@ -639,6 +639,30 @@ int128_t::operator int8_t() const {
     return NarrowCast<int8_t>(*this);
 }
 
+int128_t::operator uint64_t() const {
+    return NarrowCast<uint64_t>(*this);
+}
+
+int128_t::operator uint32_t() const {
+    return NarrowCast<uint32_t>(*this);
+}
+
+int128_t::operator uint16_t() const {
+    return NarrowCast<uint16_t>(*this);
+}
+
+int128_t::operator uint8_t() const {
+    return NarrowCast<uint8_t>(*this);
+}
+
+int128_t::operator double() const {
+    return (double)high * (double)(1ULL << 63) * 2 + (double)low;
+}
+
+int128_t::operator float() const {
+    return (float)((double)high * (double)(1ULL << 63) * 2 + (double)low);
+}
+
 } // namespace kuzu::common
 
 std::size_t std::hash<kuzu::common::int128_t>::operator()(

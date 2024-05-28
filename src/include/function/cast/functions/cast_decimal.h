@@ -16,32 +16,35 @@ using namespace kuzu::common;
 namespace kuzu {
 namespace function {
 
+template<typename A, typename B>
+struct pickDecimalPhysicalType {
+    static constexpr bool AISFLOAT = std::is_floating_point<A>::value;
+    static constexpr bool BISFLOAT = std::is_floating_point<B>::value;
+    using RES = std::conditional<(AISFLOAT? false : (BISFLOAT? true : sizeof(A) > sizeof(B))), A, B>::type;
+};
+
 struct CastDecimalTo {
     template<typename SRC, typename DST>
     static void operation(SRC& input, DST& output,
-        const ValueVector& inputVec, const ValueVector& outputVec) {
-        using T = std::conditional<(sizeof(SRC) > sizeof(DST)), SRC, DST>::type;
+        const ValueVector& inputVec, const ValueVector&) {
+        using T = pickDecimalPhysicalType<SRC, DST>::RES;
         constexpr auto pow10s = pow10Sequence<T>();
         auto scale = DecimalType::getScale(inputVec.dataType);
-        if (constexpr std::is_same<int128_t, T>::value) {
-            output = (DST)((input + (scale > 0 ? int128_t(5) * pow10s[scale-1] : 0)) / pow10s[scale]);
-        } else {
-            output = (DST)((input + (scale > 0 ? 5 * pow10s[scale - 1] : 0)) / pow10s[scale]);
-        }
+        output = (DST)(((scale > 0 ? pow10s[scale - 1] * 5 : 0) + input) / pow10s[scale]);
     }
 };
 
 struct CastToDecimal {
     template<typename SRC, typename DST>
     static void operation(SRC& input, DST& output,
-        const ValueVector& inputVec, const ValueVector& outputVec) {
-        using T = std::conditional<(sizeof(SRC) > sizeof(DST)), SRC, DST>::type;
+        const ValueVector&, const ValueVector& outputVec) {
+        using T = pickDecimalPhysicalType<SRC, DST>::RES;
         constexpr auto pow10s = pow10Sequence<T>();
-        auto scale = DecimalType::getScale(outputVec.dataType0;)
+        auto scale = DecimalType::getScale(outputVec.dataType);
         if constexpr(std::is_floating_point<SRC>::value) {
-            output = (DST)(input * pow10s[scale] + 0.5);
+            output = (DST)(pow10s[scale] * input + 0.5);
         } else {
-            output = (DST)(input * pow10s[scale]);
+            output = (DST)(pow10s[scale] * input);
         }
     }
 };
@@ -50,27 +53,22 @@ struct CastBetweenDecimal {
     template<typename SRC, typename DST>
     static void operation(SRC& input, DST& output,
         const ValueVector& inputVec, const ValueVector& outputVec) {
-        using T = std::conditional<(sizeof(SRC) > sizeof(DST)), SRC, DST>::type;
+        using T = pickDecimalPhysicalType<SRC, DST>::RES;
         constexpr auto pow10s = pow10Sequence<T>();
-        auto inputPrecision = DecmialType::getPrecision(inputVec.dataType);
-        auto outputPrecision = DecmialType::getPrecision(outputVec.dataType);
-        auto inputScale = DecmialType::getScale(inputVec.dataType);
-        auto outputScale = DecmialType::getScale(outputVec.dataType);
+        auto outputPrecision = DecimalType::getPrecision(outputVec.dataType);
+        auto inputScale = DecimalType::getScale(inputVec.dataType);
+        auto outputScale = DecimalType::getScale(outputVec.dataType);
         if (inputScale == outputScale) {
-            output = input;
-            if (output >= pow10s[outputPrecision] || output <= -pow10s[outputPrecision]) {
-                throw OverflowException("Decimal Cast Failed: input {} is not in range of {}",
+            output = (DST)input;
+            if (pow10s[outputPrecision] <= output || -pow10s[outputPrecision] >= output) {
+                throw OverflowException(stringFormat("Decimal Cast Failed: input {} is not in range of {}",
                     DecimalType::insertDecimalPoint(TypeUtils::toString(input, nullptr), inputScale),
-                    outputVec.dataType.toString());
+                    outputVec.dataType.toString()));
             }
         } else if (inputScale < outputScale) {
-            output = input * pow10s[outputScale - inputScale];
+            output = (DST)(pow10s[outputScale - inputScale] * input);
         } else if (inputScale > outputScale) {
-            if (constexpr std::is_same<int128_t, T>::value) {
-                output = (DST)((input + int128_t(5) * pow10s[inputScale - outputScale - 1]) / pow10s[inputScale - outputScale]);
-            } else {
-                output = (DST)(input + 5 * pow10s[inputScale - outputScale - 1]) / pow10s[inputScale - outputScale]);
-            }
+            output = (DST)((pow10s[inputScale - outputScale - 1] * 5 + input) / pow10s[inputScale - outputScale]);
         }
     }
 };

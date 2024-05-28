@@ -63,11 +63,7 @@ struct DecimalMultiply {
         if (left >= lim1 || left <= -lim1 || left >= lim2Low || left <= lim2High) {
             throw OverflowException("Overflow encountered when attempting to multiply decimals");
         }
-        if (constexpr std::is_same<int128_t, T>::value) {
-            result = (left * right + (scale > 0 ? int128_t(5) * pow10s[scale-1] : 0)) / pow10s[scale];
-        } else {
-            result = (left * right + (scale > 0 ? 5 * pow10s[scale-1] : 0)) / pow10s[scale];
-        }
+        result = (left * right + (scale > 0 ? pow10s[scale-1] * 5 : 0)) / pow10s[scale];
     }
 };
 
@@ -75,16 +71,11 @@ struct DecimalDivide {
     template<typename A, typename B, typename R>
     static inline void operation(A& left, B& right, R& result, common::ValueVector& resultValueVector) {
         constexpr auto pow10s = pow10Sequence<R>();
-        auto precision = DecimalType::getPrecision(resultValueVector.dataType);
         auto scale = DecimalType::getScale(resultValueVector.dataType);
         if (left >= NumericLimits<R>::maximum() / pow10s[scale] || left <= NumericLimits<R>::minimum() / pow10s[scale]) {
             throw OverflowException("Overflow encountered when attempting to divide decimals");
         }
-        if (constexpr std::is_same<int128_t, T>::value) {
-            result = (left * pow10s[scale] + (scale > 0 ? int128_t(5) * pow10s[scale-1] : 0)) / right;
-        } else {
-            result = (left * pow10s[scale] + (scale > 0 ? 5 * pow10s[scale-1] : 0)) / right;
-        }
+        result = (left * pow10s[scale] + (scale > 0 ? pow10s[scale-1] * 5 : 0)) / right;
     }
 };
 
