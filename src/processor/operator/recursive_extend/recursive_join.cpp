@@ -257,7 +257,7 @@ void RecursiveJoin::initLocalRecursivePlan(ExecutionContext* context) {
     vectors->recursiveEdgeIDVector =
         localResultSet->getValueVector(dataInfo.recursiveEdgeIDPos).get();
     recursiveRoot->initLocalState(localResultSet.get(), context);
-    recursiveSource = getSource(recursiveRoot.get())->ptrCast<LookupNodeTable>();
+    recursiveSource = getSource(recursiveRoot.get())->ptrCast<OffsetScanNodeTable>();
 }
 
 void RecursiveJoin::populateTargetDstNodes(ExecutionContext* context) {
