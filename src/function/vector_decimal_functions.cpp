@@ -270,6 +270,11 @@ std::unique_ptr<FunctionBindData> DecimalFunction::bindNegateFunc(
     return genericUnaryArithmeticFunc<DecimalNegate>(arguments, func);
 }
 
+std::unique_ptr<FunctionBindData> DecimalFunction::bindAbsFunc(
+    const binder::expression_vector& arguments, Function* func) {
+    return genericUnaryArithmeticFunc<DecimalAbs>(arguments, func);
+}
+
 std::unique_ptr<FunctionBindData> DecimalFunction::bindFloorFunc(
     const binder::expression_vector& arguments, Function* func) {
     return genericUnaryArithmeticFunc<DecimalFloor>(arguments, func);

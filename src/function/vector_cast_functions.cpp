@@ -663,6 +663,71 @@ static std::unique_ptr<ScalarFunction> bindCastToRdfVariantFunction(const std::s
         LogicalTypeID::RDF_VARIANT, execFunc);
 }
 
+template<typename DST_TYPE>
+static std::unique_ptr<ScalarFunction> bindCastToDecimalFunction(const std::string& functionName,
+    const LogicalType& sourceType, const LogicalType& targetType) {
+    scalar_func_exec_t func;
+    switch (sourceType.getLogicalTypeID()) {
+    case LogicalTypeID::INT8: {
+        func = ScalarFunction::UnaryExecNestedTypeFunction<int8_t, DST_TYPE, CastToDecimal>;
+    } break;
+    case LogicalTypeID::INT16: {
+        func = ScalarFunction::UnaryExecNestedTypeFunction<int16_t, DST_TYPE, CastToDecimal>;
+    } break;
+    case LogicalTypeID::INT32: {
+        func = ScalarFunction::UnaryExecNestedTypeFunction<int32_t, DST_TYPE, CastToDecimal>;
+    } break;
+    case LogicalTypeID::SERIAL:
+    case LogicalTypeID::INT64: {
+        func = ScalarFunction::UnaryExecNestedTypeFunction<int64_t, DST_TYPE, CastToDecimal>;
+    } break;
+    case LogicalTypeID::UINT8: {
+        func = ScalarFunction::UnaryExecNestedTypeFunction<uint8_t, DST_TYPE, CastToDecimal>;
+    } break;
+    case LogicalTypeID::UINT16: {
+        func = ScalarFunction::UnaryExecNestedTypeFunction<uint16_t, DST_TYPE, CastToDecimal>;
+    } break;
+    case LogicalTypeID::UINT32: {
+        func = ScalarFunction::UnaryExecNestedTypeFunction<uint32_t, DST_TYPE, CastToDecimal>;
+    } break;
+    case LogicalTypeID::UINT64: {
+        func = ScalarFunction::UnaryExecNestedTypeFunction<uint64_t, DST_TYPE, CastToDecimal>;
+    } break;
+    case LogicalTypeID::INT128: {
+        func = ScalarFunction::UnaryExecNestedTypeFunction<int128_t, DST_TYPE, CastToDecimal>;
+    } break;
+    case LogicalTypeID::FLOAT: {
+        func = ScalarFunction::UnaryExecNestedTypeFunction<float, DST_TYPE, CastToDecimal>;
+    } break;
+    case LogicalTypeID::DOUBLE: {
+        func = ScalarFunction::UnaryExecNestedTypeFunction<double, DST_TYPE, CastToDecimal>;
+    } break;
+    case LogicalTypeID::DECIMAL: {
+        switch (sourceType.getPhysicalType()) {
+        case PhysicalTypeID::INT16:
+            func = ScalarFunction::UnaryExecNestedTypeFunction<int16_t, DST_TYPE, CastBetweenDecimal>;
+            break;
+        case PhysicalTypeID::INT32:
+            func = ScalarFunction::UnaryExecNestedTypeFunction<int32_t, DST_TYPE, CastBetweenDecimal>;
+            break;
+        case PhysicalTypeID::INT64:
+            func = ScalarFunction::UnaryExecNestedTypeFunction<int64_t, DST_TYPE, CastBetweenDecimal>;
+            break;
+        case PhysicalTypeID::INT128:
+            func = ScalarFunction::UnaryExecNestedTypeFunction<int128_t, DST_TYPE, CastBetweenDecimal>;
+            break;
+        default:
+            KU_UNREACHABLE;
+        }
+    } break;
+    default:
+        throw ConversionException{stringFormat("Unsupported casting function from {} to {}.",
+            sourceType.toString(), targetType.toString())};
+    }
+    return std::make_unique<ScalarFunction>(functionName, std::vector<LogicalTypeID>{sourceType.getLogicalTypeID()},
+        targetType.getLogicalTypeID(), func);
+}
+
 template<typename DST_TYPE, typename OP, typename EXECUTOR = UnaryFunctionExecutor>
 static std::unique_ptr<ScalarFunction> bindCastToNumericFunction(const std::string& functionName,
     const LogicalType& sourceType, const LogicalType& targetType) {
@@ -863,32 +928,15 @@ std::unique_ptr<ScalarFunction> CastFunction::bindCastFunction(const std::string
             targetType);
     }
     case LogicalTypeID::DECIMAL: {
-        bool srcIsDecimal = sourceTypeID == LogicalTypeID::DECIMAL;
         switch (targetType.getPhysicalType()) {
         case PhysicalTypeID::INT16:
-            if (srcIsDecimal) {
-                return bindCastBetweenDecimalFunction<int16_t>(functionName, sourceType);
-            }
-            return bindCastToNumericFunction<int16_t, CastToDecimal, UnaryNestedTypeFunctionWrapper>(functionName, sourceType,
-                targetType);
+            return bindCastToDecimalFunction<int16_t>(functionName, sourceType, targetType);
         case PhysicalTypeID::INT32:
-            if (srcIsDecimal) {
-                return bindCastBetweenDecimalFunction<int32_t>(functionName, sourceType);
-            }
-            return bindCastToNumericFunction<int32_t, CastToDecimal, UnaryNestedTypeFunctionWrapper>(functionName, sourceType,
-                targetType);
+            return bindCastToDecimalFunction<int32_t>(functionName, sourceType, targetType);
         case PhysicalTypeID::INT64:
-            if (srcIsDecimal) {
-                return bindCastBetweenDecimalFunction<int64_t>(functionName, sourceType);
-            }
-            return bindCastToNumericFunction<int64_t, CastToDecimal, UnaryNestedTypeFunctionWrapper>(functionName, sourceType,
-                targetType);
+            return bindCastToDecimalFunction<int64_t>(functionName, sourceType, targetType);
         case PhysicalTypeID::INT128:
-            if (srcIsDecimal) {
-                return bindCastBetweenDecimalFunction<int128_t>(functionName, sourceType);
-            }
-            return bindCastToNumericFunction<int128_t, CastToDecimal, UnaryNestedTypeFunctionWrapper>(functionName, sourceType,
-                targetType);
+            return bindCastToDecimalFunction<int128_t>(functionName, sourceType, targetType);
         default:
             KU_UNREACHABLE;
         }

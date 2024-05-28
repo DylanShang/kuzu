@@ -656,11 +656,21 @@ int128_t::operator uint8_t() const {
 }
 
 int128_t::operator double() const {
-    return (double)high * (double)(1ULL << 63) * 2 + (double)low;
+    double result;
+    if (!Int128_t::tryCast(*this, result)) { // LCOV_EXCL_START
+        throw common::OverflowException{common::stringFormat("Value {} is not within DOUBLE range",
+            common::TypeUtils::toString(*this))};
+    } // LCOV_EXCL_STOP
+    return result;
 }
 
 int128_t::operator float() const {
-    return (float)((double)high * (double)(1ULL << 63) * 2 + (double)low);
+    float result;
+    if (!Int128_t::tryCast(*this, result)) { // LCOV_EXCL_START
+        throw common::OverflowException{common::stringFormat("Value {} is not within FLOAT range",
+            common::TypeUtils::toString(*this))};
+    } // LCOV_EXCL_STOP
+    return result;
 }
 
 } // namespace kuzu::common
