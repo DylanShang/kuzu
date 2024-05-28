@@ -5,6 +5,8 @@
 
 #include "common/types/int128_t.h"
 
+using namespace kuzu::common;
+
 namespace kuzu {
 namespace function {
 
@@ -17,11 +19,11 @@ struct NumericLimits {
 };
 
 template<>
-struct NumericLimits<common::int128_t> {
-    static constexpr common::int128_t minimum() {
+struct NumericLimits<int128_t> {
+    static constexpr int128_t minimum() {
         return {static_cast<uint64_t>(std::numeric_limits<int64_t>::lowest()), 1};
     }
-    static constexpr common::int128_t maximum() {
+    static constexpr int128_t maximum() {
         return {std::numeric_limits<int64_t>::max(),
             static_cast<int64_t>(std::numeric_limits<uint64_t>::max())};
     }

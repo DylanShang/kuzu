@@ -41,19 +41,33 @@ struct DecimalSubtract {
     }
 };
 
+template<typename T>
+static T abs(T val) {
+    return std::abs(val);
+}
+
+template<>
+int128_t abs(int128_t val) {
+    return int128_t(val.low, std::abs(val.high));
+}
+
 struct DecimalMultiply {
     template<typename A, typename B, typename R>
     static inline void operation(A& left, B& right, R& result, common::ValueVector& resultValueVector) {
         constexpr auto pow10s = pow10Sequence<R>();
         auto precision = DecimalType::getPrecision(resultValueVector.dataType);
         auto scale = DecimalType::getScale(resultValueVector.dataType);
-        auto lim1 = std::abs(pow10s[precision + scale] / right); // will logically overflow?
+        auto lim1 = abs(pow10s[precision + scale] / right); // will logically overflow?
         auto lim2Low = NumericLimits<R>::maximum() / right; // will physically overflow?
         auto lim2High = NumericLimits<R>::minimum() / right;
         if (left >= lim1 || left <= -lim1 || left >= lim2Low || left <= lim2High) {
             throw OverflowException("Overflow encountered when attempting to multiply decimals");
         }
-        result = (left * right + (scale > 0 ? 5 * pow10s[scale-1] : 0)) / pow10s[scale];
+        if (constexpr std::is_same<int128_t, T>::value) {
+            result = (left * right + (scale > 0 ? int128_t(5) * pow10s[scale-1] : 0)) / pow10s[scale];
+        } else {
+            result = (left * right + (scale > 0 ? 5 * pow10s[scale-1] : 0)) / pow10s[scale];
+        }
     }
 };
 
@@ -66,7 +80,11 @@ struct DecimalDivide {
         if (left >= NumericLimits<R>::maximum() / pow10s[scale] || left <= NumericLimits<R>::minimum() / pow10s[scale]) {
             throw OverflowException("Overflow encountered when attempting to divide decimals");
         }
-        result = (left * pow10s[scale] + (scale > 0 ? 5 * pow10s[scale-1] : 0)) / right;
+        if (constexpr std::is_same<int128_t, T>::value) {
+            result = (left * pow10s[scale] + (scale > 0 ? int128_t(5) * pow10s[scale-1] : 0)) / right;
+        } else {
+            result = (left * pow10s[scale] + (scale > 0 ? 5 * pow10s[scale-1] : 0)) / right;
+        }
     }
 };
 
@@ -97,6 +115,7 @@ struct DecimalAbs {
 struct DecimalFloor {
     template<typename A, typename R>
     static inline void operation(A& input, R& result, common::ValueVector& resultValueVector) {
+        constexpr auto pow10s = pow10Sequence<R>();
         auto scale = DecimalType::getScale(resultValueVector.dataType);
         if (input < 0) {
             // round to larger absolute value
@@ -111,6 +130,7 @@ struct DecimalFloor {
 struct DecimalCeil {
     template<typename A, typename R>
     static inline void operation(A& input, R& result, common::ValueVector& resultValueVector) {
+        constexpr auto pow10s = pow10Sequence<R>();
         auto scale = DecimalType::getScale(resultValueVector.dataType);
         if (input < 0) {
             // round to smaller absolute value
@@ -161,7 +181,7 @@ static std::unique_ptr<FunctionBindData> genericUnaryArithmeticFunc(
     auto asScalar = ku_dynamic_cast<Function*, ScalarFunction*>(func);
     KU_ASSERT(asScalar != nullptr);
     auto resultingType = arguments[0]->getDataType().copy();
-    switch(resultingType.getPhysicalType()) {
+    switch(resultingType->getPhysicalType()) {
         case PhysicalTypeID::INT16:
             asScalar->execFunc = ScalarFunction::UnaryStringExecFunction<int16_t, int16_t, FUNC>;
             break;

@@ -1,8 +1,10 @@
 #pragma once
 
 #include "common/exception/conversion.h"
+#include "common/exception/overflow.h"
 #include "common/string_format.h"
 #include "common/string_utils.h"
+#include "common/type_utils.h"
 #include "common/types/int128_t.h"
 #include "common/types/timestamp_t.h"
 #include "common/types/types.h"
@@ -297,9 +299,9 @@ bool tryDecimalCast(const char* input, uint64_t len, T& result, uint32_t precisi
         }
         pos++;
     }
-    if (res.result >= pos10s[precision]) {
+    if (res.result >= pow10s[precision]) {
         throw OverflowException(stringFormat("String is not in range of DECIMAL({}, {})",
-            to_string(precision), to_string(scale)));
+            TypeUtils::toString(precision, nullptr), TypeUtils::toString(scale, nullptr)));
     }
     if (negativeFlag) {
         res.result = -res.result;
@@ -317,7 +319,7 @@ bool tryDecimalCast(const char* input, uint64_t len, T& result, uint32_t precisi
 
 template<typename T>
 void decimalCast(const char* input, uint64_t len, T& result, const LogicalType& type) {
-    if (!tryDecimalCast(input, len, result, DecimalType::getPrecision(targetType), DecimalType::getScale(type))) {
+    if (!tryDecimalCast(input, len, result, DecimalType::getPrecision(type), DecimalType::getScale(type))) {
         throw ConversionException(stringFormat("Cast failed. {} is not in {} range.",
             std::string{input, len}, type.toString()));
     }

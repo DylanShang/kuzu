@@ -869,25 +869,25 @@ std::unique_ptr<ScalarFunction> CastFunction::bindCastFunction(const std::string
             if (srcIsDecimal) {
                 return bindCastBetweenDecimalFunction<int16_t>(functionName, sourceType);
             }
-            return bindCastToNumericFunction<int16_t, CastToDecimal, EXECUTOR>(functionName, sourceType,
+            return bindCastToNumericFunction<int16_t, CastToDecimal, UnaryNestedTypeFunctionWrapper>(functionName, sourceType,
                 targetType);
         case PhysicalTypeID::INT32:
             if (srcIsDecimal) {
                 return bindCastBetweenDecimalFunction<int32_t>(functionName, sourceType);
             }
-            return bindCastToNumericFunction<int32_t, CastToDecimal, EXECUTOR>(functionName, sourceType,
+            return bindCastToNumericFunction<int32_t, CastToDecimal, UnaryNestedTypeFunctionWrapper>(functionName, sourceType,
                 targetType);
         case PhysicalTypeID::INT64:
             if (srcIsDecimal) {
                 return bindCastBetweenDecimalFunction<int64_t>(functionName, sourceType);
             }
-            return bindCastToNumericFunction<int64_t, CastToDecimal, EXECUTOR>(functionName, sourceType,
+            return bindCastToNumericFunction<int64_t, CastToDecimal, UnaryNestedTypeFunctionWrapper>(functionName, sourceType,
                 targetType);
         case PhysicalTypeID::INT128:
             if (srcIsDecimal) {
                 return bindCastBetweenDecimalFunction<int128_t>(functionName, sourceType);
             }
-            return bindCastToNumericFunction<int128_t, CastToDecimal, EXECUTOR>(functionName, sourceType,
+            return bindCastToNumericFunction<int128_t, CastToDecimal, UnaryNestedTypeFunctionWrapper>(functionName, sourceType,
                 targetType);
         default:
             KU_UNREACHABLE;
