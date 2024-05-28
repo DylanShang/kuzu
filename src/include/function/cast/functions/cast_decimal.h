@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <type_traits>
 #include "common/types/int128_t.h"
 #include "common/types/types.h"
 #include "common/vector/value_vector.h"
@@ -18,8 +19,9 @@ struct CastDecimalTo {
     template<typename SRC, typename DST>
     static void operation(SRC& input, DST& output,
         const ValueVector& inputVec, const ValueVector& outputVec) {
+        constexpr auto pow10s = pow10Sequence<SRC>::type>();
         auto scale = DecimalType::getScale(inputVec.dataType);
-        output = input / scale;
+        output = (input + (scale > 0 ? 5 * pow10s[scale-1] : 0)) / pow10s[scale];
     }
 };
 
@@ -27,8 +29,13 @@ struct CastToDecimal {
     template<typename SRC, typename DST>
     static void operation(SRC& input, DST& output,
         const ValueVector& inputVec, const ValueVector& outputVec) {
+        constexpr auto pow10s = pow10Sequence<SRC>::type>();
         auto scale = DecimalType::getScale(outputVec.dataType0;)
-        output = input * scale;
+        if constexpr(std::is_floating_point<SRC>::value) {
+            output = input * pow10s[scale] + 0.5;
+        } else {
+            output = input * pow10s[scale];
+        }
     }
 };
 
@@ -51,7 +58,7 @@ struct CastBetweenDecimal {
         } else if (inputScale < outputScale) {
             output = input * pow10s[outputScale - inputScale];
         } else if (inputScale > outputScale) {
-            output = input / pow10s[inputScale - outputScale];
+            output = (input + 5 * pow10s[inputScale - outputScale - 1]) / pow10s[inputScale - outputScale];
         }
     }
 };

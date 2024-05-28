@@ -46,11 +46,14 @@ struct DecimalMultiply {
     static inline void operation(A& left, B& right, R& result, common::ValueVector& resultValueVector) {
         constexpr auto pow10s = pow10Sequence<R>();
         auto precision = DecimalType::getPrecision(resultValueVector.dataType);
-        auto lim = std::abs(pow10s[precision] - right);
-        if (left >= lim || left <= -lim) {
-            throw OverflowException("Decimal Multiplication result is out of range");
+        auto scale = DecimalType::getScale(resultValueVector.dataType);
+        auto lim1 = std::abs(pow10s[precision + scale] / right); // will logically overflow?
+        auto lim2Low = NumericLimits<R>::maximum() / right; // will physically overflow?
+        auto lim2High = NumericLimits<R>::minimum() / right;
+        if (left >= lim1 || left <= -lim1 || left >= lim2Low || left <= lim2High) {
+            throw OverflowException("Overflow encountered when attempting to multiply decimals");
         }
-        result = left * right / pow10s[DecimalType::getScale(resultValueVector.dataType)];
+        result = (left * right + (scale > 0 ? 5 * pow10s[scale-1] : 0)) / pow10s[scale];
     }
 };
 
@@ -59,7 +62,11 @@ struct DecimalDivide {
     static inline void operation(A& left, B& right, R& result, common::ValueVector& resultValueVector) {
         constexpr auto pow10s = pow10Sequence<R>();
         auto precision = DecimalType::getPrecision(resultValueVector.dataType);
-        result = left * pow10s[DecimalType::getScale(resultValueVector.dataType)] / right;
+        auto scale = DecimalType::getScale(resultValueVector.dataType);
+        if (left >= NumericLimits<R>::maximum() / pow10s[scale] || left <= NumericLimits<R>::minimum() / pow10s[scale]) {
+            throw OverflowException("Overflow encountered when attempting to divide decimals");
+        }
+        result = (left * pow10s[scale] + (scale > 0 ? 5 * pow10s[scale-1] : 0)) / right;
     }
 };
 
