@@ -79,6 +79,9 @@ public:
 
     void initializeScanState(transaction::Transaction* transaction,
         TableScanState& scanState) const override;
+    void intializeScanState(transaction::Transaction* transaction, TableScanState& scanState);
+
+
     bool scanInternal(transaction::Transaction* transaction, TableScanState& scanState) override;
     void lookup(transaction::Transaction* transaction, TableScanState& scanState);
 
