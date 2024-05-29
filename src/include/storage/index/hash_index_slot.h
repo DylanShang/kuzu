@@ -51,7 +51,9 @@ public:
 
 template<typename T>
 struct SlotEntry {
+    SlotEntry() : key{}, _padding{}, value{} {}
     T key;
+    uint8_t _padding[(sizeof(T) > 8 ? 16 : 8) - sizeof(T)];
     common::offset_t value;
 
     inline uint8_t* data() const { return (uint8_t*)&key; }

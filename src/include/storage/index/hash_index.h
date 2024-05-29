@@ -66,6 +66,8 @@ public:
 // S is the stored type, which is usually the same as T, with the exception of strings
 template<typename T>
 class HashIndex final : public OnDiskHashIndex {
+    // Floating point types never have unique object representations
+    static_assert(std::floating_point<T> || std::has_unique_object_representations_v<Slot<T>>);
 
 public:
     HashIndex(const DBFileIDAndName& dbFileIDAndName,
