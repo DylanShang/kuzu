@@ -33,14 +33,14 @@ std::unique_ptr<PhysicalOperator> PlanMapper::mapIndexScan(
             getOperatorID(), logicalIndexScan->getExpressionsForPrinting());
     } else {
         KU_UNREACHABLE;
-//        auto info = logicalIndexScan->getInfo(0);
-//        auto nodeTable = common::ku_dynamic_cast<storage::Table*, storage::NodeTable*>(
-//            storageManager->getTable(info->nodeTableID));
-//        auto evaluator = ExpressionMapper::getEvaluator(info->key, inSchema);
-//        auto outDataPos = DataPos(outSchema->getExpressionPos(*info->offset));
-//        return make_unique<IndexScan>(nodeTable->getTableID(), nodeTable->getPKIndex(),
-//            std::move(evaluator), outDataPos, std::move(prevOperator), getOperatorID(),
-//            logicalIndexScan->getExpressionsForPrinting());
+        //        auto info = logicalIndexScan->getInfo(0);
+        //        auto nodeTable = common::ku_dynamic_cast<storage::Table*, storage::NodeTable*>(
+        //            storageManager->getTable(info->nodeTableID));
+        //        auto evaluator = ExpressionMapper::getEvaluator(info->key, inSchema);
+        //        auto outDataPos = DataPos(outSchema->getExpressionPos(*info->offset));
+        //        return make_unique<IndexScan>(nodeTable->getTableID(), nodeTable->getPKIndex(),
+        //            std::move(evaluator), outDataPos, std::move(prevOperator), getOperatorID(),
+        //            logicalIndexScan->getExpressionsForPrinting());
     }
 }
 

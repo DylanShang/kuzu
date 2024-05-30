@@ -1,7 +1,7 @@
 #pragma once
 
-#include "processor/operator/scan/scan_node_table.h"
 #include "expression_evaluator/expression_evaluator.h"
+#include "processor/operator/scan/scan_node_table.h"
 
 namespace kuzu {
 namespace processor {
@@ -13,8 +13,9 @@ class OffsetScanNodeTable : public ScanTable {
     static constexpr PhysicalOperatorType type_ = PhysicalOperatorType::OFFSET_SCAN_NODE_TABLE;
 
 public:
-    OffsetScanNodeTable(ScanTableInfo info, common::table_id_map_t<ScanNodeTableInfo> tableIDToNodeInfo,
-        uint32_t id, const std::string& paramString)
+    OffsetScanNodeTable(ScanTableInfo info,
+        common::table_id_map_t<ScanNodeTableInfo> tableIDToNodeInfo, uint32_t id,
+        const std::string& paramString)
         : ScanTable{type_, std::move(info), id, paramString},
           tableIDToNodeInfo{std::move(tableIDToNodeInfo)}, executed{false} {}
 
@@ -42,8 +43,7 @@ struct PrimaryKeyScanSharedState {
     common::idx_t numTables;
     common::idx_t cursor;
 
-    explicit PrimaryKeyScanSharedState(common::idx_t numTables)
-        : numTables{numTables}, cursor{0} {}
+    explicit PrimaryKeyScanSharedState(common::idx_t numTables) : numTables{numTables}, cursor{0} {}
 
     common::idx_t getTableIdx();
 };
@@ -53,20 +53,21 @@ class PrimaryKeyScanNodeTable : public ScanTable {
 
 public:
     PrimaryKeyScanNodeTable(ScanTableInfo info, std::vector<ScanNodeTableInfo> nodeInfos,
-        std::unique_ptr<evaluator::ExpressionEvaluator> indexEvaluator, std::shared_ptr<PrimaryKeyScanSharedState> sharedState, uint32_t id,
+        std::unique_ptr<evaluator::ExpressionEvaluator> indexEvaluator,
+        std::shared_ptr<PrimaryKeyScanSharedState> sharedState, uint32_t id,
         const std::string& paramString)
         : ScanTable{type_, std::move(info), id, paramString}, nodeInfos{std::move(nodeInfos)},
           indexEvaluator{std::move(indexEvaluator)}, sharedState{std::move(sharedState)} {}
 
-
     bool isSource() const override { return true; }
 
-    void initLocalStateInternal(ResultSet *, ExecutionContext *) override;
+    void initLocalStateInternal(ResultSet*, ExecutionContext*) override;
 
-    bool getNextTuplesInternal(ExecutionContext *context) override;
+    bool getNextTuplesInternal(ExecutionContext* context) override;
 
     std::unique_ptr<PhysicalOperator> clone() override {
-        return std::make_unique<PrimaryKeyScanNodeTable>(info.copy(), copyVector(nodeInfos), indexEvaluator->clone(), sharedState, id, paramsString);
+        return std::make_unique<PrimaryKeyScanNodeTable>(info.copy(), copyVector(nodeInfos),
+            indexEvaluator->clone(), sharedState, id, paramsString);
     }
 
 private:
@@ -74,9 +75,6 @@ private:
     std::unique_ptr<evaluator::ExpressionEvaluator> indexEvaluator;
     std::shared_ptr<PrimaryKeyScanSharedState> sharedState;
 };
-
-
-
 
 } // namespace processor
 } // namespace kuzu
